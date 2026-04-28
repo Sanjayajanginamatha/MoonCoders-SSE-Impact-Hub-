@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  --color-primary: #0ea5e9;
+  --color-primary-hover: #0284c7;
+  --color-secondary: #0f172a;
+  --color-background: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-card: #ffffff;
+}
+
+.dark {
+  --color-primary: #38bdf8;
+  --color-primary-hover: #7dd3fc;
+  --color-secondary: #f8fafc;
+  --color-background: #0f172a;
+  --color-border: #334155;
+  --color-card: #1e293b;
+  color-scheme: dark;
+}
+
+/* Custom Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out forwards;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-secondary font-sans;
+    margin: 0;
+    font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-hover focus:ring-primary;
+  }
+  .btn-outline {
+    @apply border border-primary text-primary hover:bg-primary/10 focus:ring-primary;
+  }
+  .card {
+    @apply bg-[var(--color-card)] rounded-lg shadow-sm border border-border p-4 transition-colors duration-200;
+  }
+}
+
+/* Dark mode universal overrides for hardcoded tailwind classes used across the app */
+.dark .bg-white {
+  background-color: var(--color-card) !important;
+}
+.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700 {
+  color: #f1f5f9 !important;
+}
+.dark .text-gray-600, .dark .text-gray-500 {
+  color: #cbd5e1 !important;
+}
+.dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-slate-50, .dark .bg-sky-50 {
+  background-color: #1e293b !important;
+}
+.dark .bg-gray-200 {
+  background-color: #334155 !important;
+}
+.dark .border-gray-200, .dark .border-gray-300, .dark .border-gray-100 {
+  border-color: #334155 !important;
+}
+
+/* Fix hover backgrounds in dark mode - prevent white flash on hover */
+.dark *:hover.hover\:bg-gray-50,
+.dark *:hover.hover\:bg-gray-100,
+.dark *:hover.hover\:bg-white {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Sidebar & nav link hover fix for dark mode */
+.dark a:hover,
+.dark button:hover {
+  color: inherit;
+}
+
+/* Override hover:bg-gray-50 in dark mode globally */
+.dark .hover-dark:hover {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}

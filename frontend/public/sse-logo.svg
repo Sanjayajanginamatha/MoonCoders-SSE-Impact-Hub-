@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Shield body -->
+  <path d="M60 8L16 30v32c0 28 18.7 54.2 44 62 25.3-7.8 44-34 44-62V30L60 8z" fill="#1a56db"/>
+  <path d="M60 14L22 34v28c0 24.5 16 47.5 38 54.5 22-7 38-30 38-54.5V34L60 14z" fill="#1e3a8a" opacity="0.3"/>
+  <!-- Inner shield highlight -->
+  <path d="M60 20L28 38v24c0 21 13.5 41 32 47 18.5-6 32-26 32-47V38L60 20z" fill="#2563eb" opacity="0.5"/>
+  <!-- Leaf/sprout -->
+  <path d="M60 90V55" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+  <path d="M60 55c-8-12-22-16-28-14 2 10 12 20 28 18" fill="#10b981"/>
+  <path d="M60 65c6-10 18-14 24-12-1.5 8.5-10 17-24 16" fill="#34d399"/>
+  <!-- Growth dots -->
+  <circle cx="60" cy="48" r="3" fill="#6ee7b7"/>
+  <circle cx="60" cy="42" r="2" fill="#a7f3d0" opacity="0.7"/>
+</svg>
