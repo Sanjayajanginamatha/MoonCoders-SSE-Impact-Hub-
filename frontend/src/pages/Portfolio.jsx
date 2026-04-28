@@ -1,12 +1,45 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { Download, PackageOpen, TrendingUp, Leaf, FileText } from 'lucide-react';
+import { Download, PackageOpen, TrendingUp, Leaf, FileText, Loader2 } from 'lucide-react';
 import generate80GPDF from '../utils/generate80GPDF';
+import axios from 'axios';
 
-export default function Portfolio({ portfolio, user }) {
+export default function Portfolio({ user }) {
   const navigate = useNavigate();
+  const [investments, setInvestments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (portfolio.length === 0) {
+  useEffect(() => {
+    if (!user) return;
+    const fetchPortfolio = async () => {
+      try {
+        const token = sessionStorage.getItem('token');
+        const res = await axios.get(`http://localhost:8080/api/portfolio/${user.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setInvestments(res.data);
+      } catch (err) {
+        console.error("Failed to fetch portfolio:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPortfolio();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-1">
+        <Sidebar />
+        <div className="flex-1 p-8 flex items-center justify-center">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (investments.length === 0) {
     return (
       <div className="flex flex-1">
         <Sidebar />
@@ -24,7 +57,7 @@ export default function Portfolio({ portfolio, user }) {
     );
   }
 
-  const totalInvested = portfolio.reduce((sum, item) => sum + item.amount, 0);
+  const totalInvested = investments.reduce((sum, item) => sum + item.amount, 0);
 
   return (
     <div className="flex flex-1">
@@ -54,19 +87,19 @@ export default function Portfolio({ portfolio, user }) {
               <Leaf className="w-5 h-5 text-purple-600" />
               <p className="text-gray-600 font-semibold text-sm">NGOs Supported</p>
             </div>
-            <h3 className="text-4xl font-bold text-purple-600">{portfolio.length}</h3>
+            <h3 className="text-4xl font-bold text-purple-600">{investments.length}</h3>
           </div>
         </div>
 
         <h3 className="text-xl font-bold text-secondary mb-4">Investment History</h3>
         <div className="space-y-4">
-          {portfolio.map((item, index) => (
-            <div key={index} className="card p-5 flex flex-col sm:flex-row items-center gap-4 hover:shadow-md transition-shadow">
-              <img src={item.ngo.image} alt={item.ngo.name} className="w-16 h-16 rounded-lg object-cover shrink-0" />
+          {investments.map((item, index) => (
+            <div key={item.id || index} className="card p-5 flex flex-col sm:flex-row items-center gap-4 hover:shadow-md transition-shadow">
+              <img src={item.ngo?.image || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&q=80'} alt={item.ngo?.name} className="w-16 h-16 rounded-lg object-cover shrink-0" />
               <div className="flex-1 text-center sm:text-left">
-                <h4 className="text-lg font-bold text-secondary">{item.ngo.name}</h4>
+                <h4 className="text-lg font-bold text-secondary">{item.ngo?.name || 'NGO'}</h4>
                 <p className="text-gray-500 text-sm">
-                  Bond ID: ZCZP-{(item.txnId || 'TXN-' + (index + 1001)).replace('TXN-', '')} &nbsp;•&nbsp; {new Date(item.date).toLocaleDateString('en-IN')}
+                  Bond ID: ZCZP-{(item.transactionId || 'TXN-' + (index + 1001)).replace('ZCZP-', '')} &nbsp;•&nbsp; {new Date(item.investmentDate).toLocaleDateString('en-IN')}
                 </p>
                 <span className="inline-block mt-1 text-xs bg-green-50 text-green-700 font-semibold px-2 py-0.5 rounded-full border border-green-200">
                   Impact Active
@@ -84,8 +117,8 @@ export default function Portfolio({ portfolio, user }) {
                   user,
                   ngo: item.ngo,
                   amount: item.amount,
-                  txnId: item.txnId || 'TXN-' + (index + 100000),
-                  date: item.date
+                  txnId: item.transactionId || 'TXN-' + (index + 100000),
+                  date: item.investmentDate
                 })}
               >
                 <Download className="w-4 h-4" /> 80G Certificate

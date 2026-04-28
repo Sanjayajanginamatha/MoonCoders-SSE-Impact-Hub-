@@ -126,7 +126,15 @@ public class InvestmentController {
         investment.setNgo(ngo);
         investment.setAmount(amount);
         investment.setInvestmentDate(LocalDateTime.now());
-        investment.setTransactionId("ZCZP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        
+        // Use blockchain hash if provided, otherwise generate a placeholder
+        String txHash = (String) request.get("blockchainTxHash");
+        if (txHash != null && !txHash.isBlank()) {
+            investment.setTransactionId(txHash);
+            investment.setBlockchainTxHash(txHash);
+        } else {
+            investment.setTransactionId("ZCZP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        }
 
         investmentRepository.save(investment);
 

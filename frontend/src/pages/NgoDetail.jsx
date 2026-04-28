@@ -8,6 +8,7 @@ import {
   ArrowLeft, Verified, TrendingUp, Info, CheckCircle,
   Download, X, Smartphone, Clock, Shield, AlertTriangle, Loader2
 } from 'lucide-react';
+import { useWeb3 } from '../context/Web3Context';
 
 // Payment QR — uses static image from /public/payment-qr.jpg
 // Falls back to a generated UPI QR if the image file is missing
@@ -56,13 +57,14 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
   const [imgError, setImgError] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const investDate = useRef(new Date().toISOString());
+  const { account, contract, connectWallet } = useWeb3();
 
   if (!ngo) return <div className="p-8 text-center text-gray-500">NGO not found</div>;
 
   const percent = Math.min(100, Math.round((ngo.raised / ngo.target) * 100));
 
-  // Get current user from localStorage (always fresh)
-  const currentUser = user || JSON.parse(localStorage.getItem('user') || 'null');
+  // Get current user from sessionStorage (always fresh)
+  const currentUser = user || JSON.parse(sessionStorage.getItem('user') || 'null');
 
   const handlePayment = () => {
     if (!amount || amount < 1000) {
@@ -85,17 +87,35 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
     setIsProcessing(true);
     setPaymentStep('loading');
     const investAmount = Number(amount) || 0;
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
 
     try {
+      // 1. Ensure Wallet is connected
+      if (!account || !contract) {
+        setPayError('Please connect your MetaMask wallet first!');
+        setIsProcessing(false);
+        setPaymentStep('qr');
+        await connectWallet();
+        return;
+      }
+
+      // 2. Execute Blockchain Transaction
+      // We pass the investor address, NGO name, and amount to the Smart Contract
+      const tx = await contract.mintBond(account, ngo.name, investAmount);
+      
+      // 3. Wait for the transaction to be permanently mined on the blockchain
+      const receipt = await tx.wait();
+      const txHash = receipt.hash || tx.hash;
+
+      // 4. Save to our PostgreSQL Backend with the immutable Blockchain Hash
       const res = await axios.post(
         'http://localhost:8080/api/invest',
-        { ngoId: ngo.id, amount: investAmount },
+        { ngoId: ngo.id, amount: investAmount, blockchainTxHash: txHash },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const savedInvestment = res.data.investment || {};
-      const generatedTxnId = savedInvestment.transactionId || ('ZCZP-' + Math.random().toString(36).substr(2, 8).toUpperCase());
+      const generatedTxnId = txHash; // Use Blockchain Hash as the main ID!
       const generatedReceiptNo = 'RCPT-' + Date.now().toString().slice(-10);
       setTxnId(generatedTxnId);
       setReceiptNo(generatedReceiptNo);
@@ -121,12 +141,13 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
       if (setUser) {
         setUser(prev => {
           const updated = { ...prev, impactPoints: (prev?.impactPoints || 0) + pointsEarned };
-          localStorage.setItem('user', JSON.stringify(updated));
+          sessionStorage.setItem('user', JSON.stringify(updated));
           return updated;
         });
       }
     } catch (err) {
       setIsProcessing(false);
+      console.error("Payment Error:", err);
       const errData = err.response?.data;
       if (errData?.action === 'COMPLETE_KYC') {
         setPaymentStep('kyc-required');
@@ -135,7 +156,7 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
         setPayError('Cannot connect to server. Please ensure the backend is running.');
       } else {
         setPaymentStep('qr');
-        setPayError(errData?.error || errData?.message || 'Payment failed. Please try again.');
+        setPayError(errData?.error || errData?.message || err.message || 'Payment failed. Please try again.');
       }
     }
   };
@@ -247,6 +268,12 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
                 </div>
 
                 <div className="p-6">
+                  {payError && (
+                    <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-100 flex items-start gap-2">
+                      <AlertTriangle className="w-5 h-5 shrink-0" />
+                      {payError}
+                    </div>
+                  )}
                   <div className="text-center mb-5">
                     <p className="text-sm text-gray-500">Amount to Pay</p>
                     <p className="text-4xl font-black text-secondary mt-1">₹{Number(amount || 0).toLocaleString()}</p>
@@ -311,19 +338,19 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
                       <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
                         <CheckCircle className="w-4 h-4" />
                       </div>
-                      <span className="text-sm text-green-700 font-medium">Payment received via UPI</span>
+                      <span className="text-sm text-green-700 font-medium">Please confirm in MetaMask...</span>
                     </div>
                     <div className="flex items-center gap-3" style={{ animation: 'fadeIn 1s ease-in' }}>
                       <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
                         <Loader2 className="w-4 h-4" style={{ animation: 'spin 1s linear infinite' }} />
                       </div>
-                      <span className="text-sm text-blue-700 font-medium">Verifying transaction details...</span>
+                      <span className="text-sm text-blue-700 font-medium">Minting ZCZP Bond to Blockchain...</span>
                     </div>
                     <div className="flex items-center gap-3" style={{ animation: 'fadeIn 1.5s ease-in' }}>
                       <div className="w-6 h-6 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center shrink-0">
                         <Download className="w-3 h-3" />
                       </div>
-                      <span className="text-sm text-gray-400 font-medium">Generating 80G Certificate...</span>
+                      <span className="text-sm text-gray-400 font-medium">Saving receipt to database...</span>
                     </div>
                   </div>
 
@@ -458,8 +485,8 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
                       <span className="font-mono font-semibold text-primary">{receiptNo}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Bond ID</span>
-                      <span className="font-mono font-semibold text-secondary">{txnId}</span>
+                      <span className="text-gray-500">Blockchain Hash</span>
+                      <span className="font-mono font-semibold text-secondary truncate max-w-[200px]" title={txnId}>{txnId}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Date</span>

@@ -43,6 +43,18 @@ public class User {
     // Impact/gamification points earned through investments
     private int impactPoints = 0;
 
+    // Profile Details
+    @Column(columnDefinition="TEXT")
+    private String profileImage;
+    private String dob;
+    private String gender;
+    private String address;
+    private String city;
+    private String state;
+    private String pincode;
+    private String occupation;
+    private String aadhar;
+
     // Password reset token
     private String resetToken;
 

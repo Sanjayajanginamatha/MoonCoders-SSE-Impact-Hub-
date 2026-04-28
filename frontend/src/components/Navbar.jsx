@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, CreditCard, MapPin, Briefcase, ChevronDown, LogOut, Settings, Moon, Sun } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import { getTierInfo } from '../utils/gamification';
+import { useWeb3 } from '../context/Web3Context';
 
 export default function Navbar({ user, setUser }) {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const menuRef = useRef(null);
+  const { account, connectWallet, isConnecting } = useWeb3();
 
   const handleLogout = () => {
     setUser(null);
@@ -47,6 +49,21 @@ export default function Navbar({ user, setUser }) {
             >
               {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
+
+            {account ? (
+              <div className="hidden md:flex items-center gap-2 bg-green-50 text-green-700 px-4 py-1.5 rounded-full font-semibold text-sm border border-green-200">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                {account.substring(0, 6)}...{account.substring(account.length - 4)}
+              </div>
+            ) : (
+              <button 
+                onClick={connectWallet}
+                disabled={isConnecting}
+                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-1.5 rounded-full font-semibold text-sm transition-all shadow-md"
+              >
+                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              </button>
+            )}
 
             {!user ? (
               <>

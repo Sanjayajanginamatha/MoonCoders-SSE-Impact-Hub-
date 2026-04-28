@@ -2,7 +2,7 @@ export const ngos = [
   {
     id: 1,
     name: "Akshaya Patra Foundation",
-    image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=800",
     raised: 3750000,
     target: 5000000,
     sdgs: ["Zero Hunger", "Good Health"],
@@ -12,7 +12,7 @@ export const ngos = [
   {
     id: 2,
     name: "Teach For India",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800",
     raised: 1200000,
     target: 2000000,
     sdgs: ["Quality Education", "Reduced Inequalities"],
@@ -22,7 +22,7 @@ export const ngos = [
   {
     id: 3,
     name: "Sanjivani Health Trust",
-    image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=800",
     raised: 800000,
     target: 1000000,
     sdgs: ["Good Health", "Clean Water"],
@@ -32,7 +32,7 @@ export const ngos = [
   {
     id: 4,
     name: "Green Earth Initiative",
-    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=800",
     raised: 4500000,
     target: 6000000,
     sdgs: ["Climate Action", "Life on Land"],
@@ -52,7 +52,7 @@ export const ngos = [
   {
     id: 6,
     name: "HelpAge India",
-    image: "https://images.unsplash.com/photo-1513159446162-54eb8bdaa79ea?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1513159446162-54eb8bdaa79ea?auto=format&fit=crop&q=80&w=800",
     raised: 1500000,
     target: 2500000,
     sdgs: ["Good Health", "Reduced Inequalities"],
@@ -62,7 +62,7 @@ export const ngos = [
   {
     id: 7,
     name: "Smile Foundation",
-    image: "https://images.unsplash.com/photo-1603525547614-72b14e9f5641?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1603525547614-72b14e9f5641?auto=format&fit=crop&q=80&w=800",
     raised: 3100000,
     target: 4500000,
     sdgs: ["Quality Education", "Good Health"],

@@ -14,11 +14,13 @@ import ForgotPassword from './pages/ForgotPassword';
 import Notifications from './pages/Notifications';
 import { ThemeProvider } from './components/ThemeProvider';
 
+import Footer from './components/Footer';
+
 function App() {
-  // Restore user from localStorage on page load/refresh
+  // Restore user from sessionStorage on page load/refresh
   const [user, setUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('user');
+      const saved = sessionStorage.getItem('user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -26,14 +28,14 @@ function App() {
   });
   const [portfolio, setPortfolio] = useState([]);
 
-  // Sync user changes to localStorage
+  // Sync user changes to sessionStorage
   const handleSetUser = (newUser) => {
     setUser(newUser);
     if (newUser) {
-      localStorage.setItem('user', JSON.stringify(newUser));
+      sessionStorage.setItem('user', JSON.stringify(newUser));
     } else {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
     }
   };
 
@@ -59,6 +61,7 @@ function App() {
           </div>
 
           <AIAssistant />
+          <Footer />
         </div>
       </Router>
     </ThemeProvider>

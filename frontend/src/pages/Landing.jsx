@@ -30,120 +30,106 @@ export default function Landing() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Animated Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-[120px] animate-pulse" style={{ transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)` }} />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s', transform: `translate(${-mousePosition.x * 0.01}px, ${-mousePosition.y * 0.01}px)` }} />
-        <div className="absolute top-1/2 right-0 w-64 h-64 bg-gradient-to-r from-emerald-500/15 to-teal-500/15 rounded-full blur-[100px]" />
-      </div>
-
+    <div className="flex flex-col min-h-screen bg-slate-100 text-slate-900">
       {/* Navbar */}
-      <nav className={`relative z-10 transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <nav className={`relative z-10 bg-white border-b border-slate-200 transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <Globe className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">ImpactInvest</span>
+              <span className="text-2xl font-bold text-slate-900 tracking-tight">ImpactHub</span>
             </div>
-            <div className="hidden md:flex items-center gap-8">
-              <button onClick={() => navigate('/dashboard')} className="text-slate-300 hover:text-white transition-colors">Explore</button>
-              <button onClick={() => navigate('/auth')} className="text-slate-300 hover:text-white transition-colors">About</button>
-              <button onClick={() => navigate('/auth')} className="text-slate-300 hover:text-white transition-colors">Contact</button>
+            <div className="hidden md:flex items-center gap-8 font-medium">
+              <button onClick={() => navigate('/dashboard')} className="text-slate-600 hover:text-primary transition-colors">Marketplace</button>
+              <button onClick={() => navigate('/auth')} className="text-slate-600 hover:text-primary transition-colors">NGO Partners</button>
+              <button onClick={() => navigate('/auth')} className="text-slate-600 hover:text-primary transition-colors">About</button>
             </div>
-            <button onClick={() => navigate('/auth')} className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold hover:shadow-lg hover:shadow-cyan-500/30 transition-all hover:scale-105">
-              Sign In
-            </button>
+            <div className="flex items-center gap-4">
+              <button onClick={() => navigate('/auth')} className="px-6 py-2.5 rounded-full bg-primary text-white font-semibold hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/30 transition-all">
+                Log In
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
-      {/* Groww-style Hero Section */}
-      <section className={`relative overflow-hidden pt-16 pb-20 transition-all duration-1000 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-12 lg:grid-cols-2 items-center">
+      {/* Clean Professional Hero Section */}
+      <section className={`relative overflow-hidden pt-20 pb-24 transition-all duration-1000 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-16 lg:grid-cols-2 items-center">
+          
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 px-4 py-2 text-sm text-cyan-400 animate-fade-in">
-              <Zap className="w-4 h-4" />
-              <span>India's 1st Social Stock Exchange Platform</span>
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-200 px-4 py-2 text-sm text-blue-700 font-medium">
+              <ShieldCheck className="w-4 h-4" />
+              <span>SEBI Regulated Social Stock Exchange</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight">
-              Invest in <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Change</span>.<br />
-              Earn <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">Impact</span>.
+            
+            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.1]">
+              Invest with <span className="text-blue-600">Purpose.</span><br />
+              Grow with <span className="text-blue-500">Impact.</span>
             </h1>
-            <p className="text-lg text-slate-400 max-w-xl leading-relaxed">
-              Discover a revolutionary investing experience for ZCZP bonds, verified NGOs, and green funds. Track your impact, enjoy tax benefits, and be part of India's social finance revolution.
+            
+            <p className="text-lg text-slate-600 max-w-xl leading-relaxed">
+              India's premier platform for Zero-Coupon Zero-Principal (ZCZP) bonds. Support verified NGOs, track your social return on investment, and claim instant 80G tax benefits.
             </p>
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <button onClick={() => navigate('/kyc')} className="group inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-white text-base font-semibold shadow-2xl shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all hover:scale-105">
-                <span>Start Investing</span>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center pt-4">
+              <button onClick={() => navigate('/kyc')} className="group inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-white text-lg font-semibold shadow-xl shadow-primary/20 hover:bg-primary-hover hover:-translate-y-0.5 transition-all">
+                Start Investing
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button onClick={() => navigate('/dashboard')} className="inline-flex items-center justify-center rounded-full border border-slate-600 bg-slate-800/50 px-8 py-4 text-sm font-semibold text-white hover:bg-slate-700/50 transition-all hover:border-slate-500">
-                View Demo
+              <button onClick={() => navigate('/dashboard')} className="inline-flex items-center justify-center rounded-full bg-white border border-slate-300 px-8 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all">
+                View Marketplace
               </button>
             </div>
 
-            <div className="mt-12 flex items-center gap-8">
-              <div className="flex -space-x-3">
-                {[1,2,3,4,5].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs text-white font-semibold">
-                    {String.fromCharCode(64+i)}
-                  </div>
-                ))}
+            <div className="mt-8 pt-8 border-t border-slate-200 flex items-center gap-12">
+              <div>
+                <p className="text-3xl font-black text-slate-900">₹12.4 Cr</p>
+                <p className="text-slate-500 font-medium mt-1">Capital Mobilized</p>
               </div>
               <div>
-                <p className="text-white font-semibold">50,000+ Investors</p>
-                <p className="text-slate-400 text-sm">Trusting our platform</p>
+                <p className="text-3xl font-black text-slate-900">24</p>
+                <p className="text-slate-500 font-medium mt-1">Verified NGOs</p>
+              </div>
+              <div>
+                <p className="text-3xl font-black text-slate-900">50k+</p>
+                <p className="text-slate-500 font-medium mt-1">Active Investors</p>
               </div>
             </div>
           </div>
 
-          <div className="relative">
-            {/* Floating cards animation */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-[2rem] blur-[60px] opacity-30 animate-pulse" />
-            <div className="relative rounded-[2rem] bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-1 shadow-2xl border border-slate-700/50 backdrop-blur-xl">
-              <div className="rounded-[1.75rem] bg-slate-900/90 p-8 border border-slate-700/50">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <p className="text-sm text-slate-400">Featured Opportunity</p>
-                    <h2 className="text-2xl font-bold text-white mt-1">ZCZP Bond</h2>
-                  </div>
-                  <span className="inline-flex rounded-full bg-cyan-500/20 text-cyan-400 px-3 py-1 text-xs font-semibold border border-cyan-500/30">Verified</span>
+          <div className="relative lg:ml-10">
+            {/* Professional Image instead of Abstract Blur */}
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-slate-300/50 border border-slate-200 aspect-[4/3] group">
+              <img 
+                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1000" 
+                alt="Professional Investment Office" 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+              
+              <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur rounded-2xl p-5 shadow-lg border border-slate-100 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Market Status</p>
+                  <p className="text-xs font-medium text-emerald-600 flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3" /> ZCZP Trading Active
+                  </p>
                 </div>
-
-                <div className="grid gap-4 sm:grid-cols-2 mb-6">
-                  <div className="rounded-[1.75rem] bg-slate-800/50 p-5 border border-slate-700/50">
-                    <p className="text-xs text-slate-400">Annual Returns</p>
-                    <p className="text-2xl font-bold text-cyan-400">18.5%</p>
-                  </div>
-                  <div className="rounded-[1.75rem] bg-slate-800/50 p-5 border border-slate-700/50">
-                    <p className="text-xs text-slate-400">Min. Investment</p>
-                    <p className="text-2xl font-bold text-white">₹ 1,000</p>
-                  </div>
+                <div className="flex -space-x-2">
+                  <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700">A</div>
+                  <div className="w-8 h-8 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">R</div>
+                  <div className="w-8 h-8 rounded-full border-2 border-white bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700">S</div>
                 </div>
-
-                <div className="rounded-[1.75rem] bg-slate-800/50 p-5 border border-slate-700/50">
-                  <p className="text-sm text-slate-400 mb-3">Why choose this</p>
-                  <ul className="space-y-3 text-sm text-slate-300">
-                    <li className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-cyan-400" /> 100% verified projects</li>
-                    <li className="flex items-center gap-2"><Award className="w-4 h-4 text-emerald-400" /> 80G tax benefits</li>
-                    <li className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-blue-400" /> Real-time impact tracking</li>
-                  </ul>
-                </div>
-
-                <button onClick={() => navigate('/kyc')} className="w-full mt-6 py-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold hover:shadow-lg hover:shadow-cyan-500/30 transition-all">
-                  Invest Now →
-                </button>
               </div>
             </div>
           </div>
+          
         </div>
       </section>
 
-      {/* Search + Categories */}
+      {/* Search + Categories - Light Mode */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="rounded-[2rem] bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6 shadow-2xl shadow-slate-900/50 border border-slate-700/50 backdrop-blur-sm">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

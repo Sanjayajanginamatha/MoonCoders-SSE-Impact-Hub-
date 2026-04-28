@@ -129,27 +129,27 @@ export default function Account({ user, setUser }) {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (setUser) {
-      setUser({
-        ...user,
-        name,
-        phone,
-        pan,
-        profileImage,
-        dob: dateOfBirth,
-        gender,
-        address,
-        city,
-        state,
-        pincode,
-        occupation,
-        aadhar,
-      });
+    try {
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+      const res = await axios.put(
+        'http://localhost:8080/api/auth/profile',
+        {
+          name, phone, profileImage,
+          dob: dateOfBirth, gender, address, city, state, pincode, occupation, aadhar
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (setUser) {
+        setUser(res.data.user);
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+      alert("Failed to save profile. Please try again.");
     }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
   };
 
   const handleImageChange = (e) => {

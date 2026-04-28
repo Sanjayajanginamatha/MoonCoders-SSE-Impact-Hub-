@@ -246,6 +246,41 @@ public class AuthController {
     }
 
     // ─────────────────────────────────────────────
+    // UPDATE PROFILE
+    // ─────────────────────────────────────────────
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> request,
+                                           @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractUsername(token);
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
+        }
+
+        User user = userOpt.get();
+        if (request.containsKey("name")) user.setName(request.get("name"));
+        if (request.containsKey("phone")) user.setPhone(request.get("phone"));
+        if (request.containsKey("profileImage")) user.setProfileImage(request.get("profileImage"));
+        if (request.containsKey("dob")) user.setDob(request.get("dob"));
+        if (request.containsKey("gender")) user.setGender(request.get("gender"));
+        if (request.containsKey("address")) user.setAddress(request.get("address"));
+        if (request.containsKey("city")) user.setCity(request.get("city"));
+        if (request.containsKey("state")) user.setState(request.get("state"));
+        if (request.containsKey("pincode")) user.setPincode(request.get("pincode"));
+        if (request.containsKey("occupation")) user.setOccupation(request.get("occupation"));
+        if (request.containsKey("aadhar")) user.setAadhar(request.get("aadhar"));
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+            "message", "Profile updated successfully!",
+            "user", user
+        ));
+    }
+
+    // ─────────────────────────────────────────────
     // FORGOT PASSWORD
     // ─────────────────────────────────────────────
     @PostMapping("/forgot-password")

@@ -28,8 +28,8 @@ export default function Auth({ setUser }) {
         const res = await axios.post('http://localhost:8080/api/auth/login', { email, password });
         const { token, user } = res.data;
 
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         navigate('/dashboard');
 
@@ -42,8 +42,8 @@ export default function Auth({ setUser }) {
         const res = await axios.post('http://localhost:8080/api/auth/login', { email, password });
         const { token, user } = res.data;
 
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         navigate('/dashboard');
       }

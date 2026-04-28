@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,9 +20,10 @@ public class Investment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ngo_id")
     private Ngo ngo;
 
@@ -30,4 +32,7 @@ public class Investment {
     private LocalDateTime investmentDate;
     
     private String transactionId;
+
+    @Column(name = "blockchain_tx_hash")
+    private String blockchainTxHash;
 }
