@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Mail, Phone, User, CreditCard, Lock, CheckCircle, ArrowRight } from 'lucide-react';
+import {
+  Mail, Phone, User, CreditCard, Lock,
+  CheckCircle, ArrowRight, Landmark, AlertCircle
+} from 'lucide-react';
 
+/**
+ * KYC Registration Flow — 5 steps:
+ *  1. Name + Phone
+ *  2. Email
+ *  3. PAN Card (required for ZCZP bonds & 80G)
+ *  4. Demat Account Number (required by SEBI to hold ZCZP bonds)
+ *  5. Password
+ */
 const Kyc = ({ setUser }) => {
+  const TOTAL_STEPS = 5;
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     pan: '',
+    dematAccountNumber: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -22,238 +35,294 @@ const Kyc = ({ setUser }) => {
 
   const nextStep = () => {
     setError('');
-    if (step === 1 && (!formData.name || !formData.phone)) {
-      setError('Please fill in all fields');
-      return;
+    if (step === 1) {
+      if (!formData.name.trim()) { setError('Please enter your full name.'); return; }
+      if (!formData.phone.trim()) { setError('Please enter your phone number.'); return; }
+      if (!/^\+?[0-9]{10,13}$/.test(formData.phone.replace(/\s/g, ''))) {
+        setError('Please enter a valid 10-digit mobile number.'); return;
+      }
     }
-    if (step === 2 && !formData.email) {
-      setError('Please enter your email');
-      return;
+    if (step === 2 && !formData.email.trim()) {
+      setError('Please enter your email address.'); return;
     }
-    if (step === 3 && !formData.pan) {
-      setError('Please enter your PAN');
-      return;
+    if (step === 3) {
+      if (!formData.pan.trim()) { setError('Please enter your PAN number.'); return; }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan)) {
+        setError('Invalid PAN format. Should be like ABCDE1234F (5 letters, 4 digits, 1 letter).'); return;
+      }
+    }
+    if (step === 4) {
+      // Demat is optional during registration — can be linked later
+      if (formData.dematAccountNumber.trim() && formData.dematAccountNumber.trim().length < 8) {
+        setError('Demat account number must be at least 8 characters if provided.'); return;
+      }
     }
     setStep(step + 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.password) {
-      setError('Please set a password');
+    if (!formData.password || formData.password.length < 6) {
+      setError('Password must be at least 6 characters.');
       return;
     }
-    
+
     setLoading(true);
+    setError('');
     try {
-      // Register the user
-      await axios.post('http://localhost:8080/api/auth/register', formData);
-      
+      // Register with full KYC data
+      await axios.post('http://localhost:8080/api/auth/register', {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        pan: formData.pan.toUpperCase(),
+        dematAccountNumber: formData.dematAccountNumber,
+        password: formData.password
+      });
+
       // Auto-login after registration
       const loginRes = await axios.post('http://localhost:8080/api/auth/login', {
         email: formData.email,
         password: formData.password
       });
-      
-      setUser(loginRes.data.user);
+
+      const { token, user } = loginRes.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
       navigate('/dashboard');
+
     } catch (err) {
-      setError(err.response?.data || 'An error occurred during verification');
+      if (err.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Please make sure the backend is running.');
+      } else {
+        setError(err.response?.data?.error || err.response?.data || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const StepIndicator = () => (
-    <div className="flex items-center space-x-2 mb-8">
-      {[1, 2, 3, 4].map((num) => (
-        <div key={num} className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= num ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-            {num}
+    <div className="flex items-center space-x-1 mb-8">
+      {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((num) => (
+        <div key={num} className="flex items-center flex-1">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+            step > num ? 'bg-green-500 text-white' :
+            step === num ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
+          }`}>
+            {step > num ? <CheckCircle className="w-4 h-4" /> : num}
           </div>
-          {num < 4 && <div className={`w-12 h-1 ${step > num ? 'bg-primary' : 'bg-gray-200'}`} />}
+          {num < TOTAL_STEPS && <div className={`flex-1 h-1 mx-1 ${step > num ? 'bg-green-400' : 'bg-gray-200'}`} />}
         </div>
       ))}
     </div>
   );
 
+  const stepTitles = [
+    'Enter Your Details',
+    'Add your Email',
+    'PAN Card Verification',
+    'Demat Account Linking',
+    'Set Your Password'
+  ];
+
+  const stepSubtitles = [
+    'Start with your name and mobile number',
+    'All portfolio updates and tax certificates go here',
+    'Required for ZCZP bonds & 80G tax benefit under Section 80G',
+    'Required by SEBI to hold ZCZP bonds — you can skip and link later',
+    'Secure your impact investment account'
+  ];
+
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Side - Graphics/Info */}
-      <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-blue-50 p-12">
+      {/* Left Side */}
+      <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 p-12">
         <div className="text-center max-w-md">
-          {step === 1 && (
-            <>
-              <div className="bg-white p-6 rounded-full inline-block shadow-lg mb-6">
-                <User size={64} className="text-primary" />
-              </div>
-              <h2 className="text-3xl font-bold text-secondary mb-4">Minimum Documents. Quick Onboarding.</h2>
-              <p className="text-gray-600 text-lg">Start with just your Mobile Number and Name. Zero paperwork required for initial sign up.</p>
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <div className="bg-white p-6 rounded-full inline-block shadow-lg mb-6">
-                <Mail size={64} className="text-primary" />
-              </div>
-              <h2 className="text-3xl font-bold text-secondary mb-4">KYC Verification via Email</h2>
-              <p className="text-gray-600 text-lg">We will send all important portfolio updates and tax certificates to this email address.</p>
-            </>
-          )}
-          {step === 3 && (
-            <>
-              <div className="bg-white p-6 rounded-full inline-block shadow-lg mb-6">
-                <CreditCard size={64} className="text-primary" />
-              </div>
-              <h2 className="text-3xl font-bold text-secondary mb-4">Verify your PAN</h2>
-              <p className="text-gray-600 text-lg">Your PAN details are securely verified to comply with SEBI regulations. Your information is 100% safe and encrypted.</p>
-            </>
-          )}
+          <div className="bg-white p-6 rounded-full inline-block shadow-lg mb-6">
+            {step === 1 && <User size={64} className="text-primary" />}
+            {step === 2 && <Mail size={64} className="text-primary" />}
+            {step === 3 && <CreditCard size={64} className="text-primary" />}
+            {step === 4 && <Landmark size={64} className="text-primary" />}
+            {step === 5 && <Lock size={64} className="text-primary" />}
+          </div>
+          <h2 className="text-3xl font-bold text-secondary mb-4">{stepTitles[step - 1]}</h2>
+          <p className="text-gray-600 text-lg">{stepSubtitles[step - 1]}</p>
+
+          {/* SEBI notice on Demat step */}
           {step === 4 && (
-            <>
-              <div className="bg-white p-6 rounded-full inline-block shadow-lg mb-6">
-                <Lock size={64} className="text-primary" />
-              </div>
-              <h2 className="text-3xl font-bold text-secondary mb-4">Secure your Account</h2>
-              <p className="text-gray-600 text-lg">Set a strong password to protect your social impact investments and portfolio.</p>
-            </>
+            <div className="mt-6 bg-white rounded-xl p-4 text-left shadow-sm border border-blue-200">
+              <p className="text-xs font-bold text-primary mb-2">📋 SEBI Requirement</p>
+              <p className="text-xs text-gray-600">
+                As per SEBI regulations, Zero Coupon Zero Principal (ZCZP) bonds must be held in 
+                a registered Demat account. This is mandatory for all investors.
+              </p>
+            </div>
+          )}
+
+          {/* PAN notice */}
+          {step === 3 && (
+            <div className="mt-6 bg-white rounded-xl p-4 text-left shadow-sm border border-blue-200">
+              <p className="text-xs font-bold text-primary mb-2">🔐 Why PAN is needed?</p>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>✓ Mandatory for 80G tax deduction claim</li>
+                <li>✓ Required by Income Tax Act for investments above ₹5,000</li>
+                <li>✓ Used for SEBI-compliant investor verification</li>
+              </ul>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-24 bg-white">
+      {/* Right Side — Form */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16 bg-white">
         <div className="w-full max-w-md">
           <StepIndicator />
-          
-          <h1 className="text-2xl font-bold text-secondary mb-6">
-            {step === 1 && "Enter Your Details"}
-            {step === 2 && "Add your email address"}
-            {step === 3 && "Enter your PAN Number"}
-            {step === 4 && "Set your Password"}
-          </h1>
 
-          {error && <div className="bg-red-50 text-red-500 p-3 rounded mb-6 text-sm">{error}</div>}
+          <h1 className="text-2xl font-bold text-secondary mb-1">{stepTitles[step - 1]}</h1>
+          <p className="text-sm text-gray-500 mb-6">{stepSubtitles[step - 1]}</p>
 
-          <form onSubmit={step === 4 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
-            
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-5 text-sm flex items-start gap-2 border border-red-100">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={step === TOTAL_STEPS ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+
+            {/* Step 1: Name + Phone */}
             {step === 1 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name (as per PAN)</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone size={18} className="text-gray-400" />
-                    </div>
+                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="+91 "
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Full Name (As per PAN)</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User size={18} className="text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      type="text" name="name" value={formData.name}
+                      onChange={handleChange} required
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                       placeholder="e.g. Rahul Sharma"
                     />
                   </div>
                 </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-6">
-                <button type="button" onClick={() => setFormData({...formData, email: formData.name.replace(/\s+/g, '').toLowerCase() + '@gmail.com'})} className="w-full flex items-center justify-center space-x-2 border border-gray-300 py-3 rounded-md hover:bg-gray-50 transition-colors">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  <span className="font-medium text-gray-700">Continue with Google</span>
-                </button>
-                
-                <div className="flex items-center">
-                  <div className="flex-1 border-t border-gray-300"></div>
-                  <span className="px-4 text-sm text-gray-500 uppercase">OR</span>
-                  <div className="flex-1 border-t border-gray-300"></div>
-                </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Add Email Manually</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail size={18} className="text-gray-400" />
-                    </div>
+                    <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="name@example.com"
+                      type="tel" name="phone" value={formData.phone}
+                      onChange={handleChange} required
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                      placeholder="+91 9876543210"
                     />
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Step 2: Email */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                  <div className="relative">
+                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="email" name="email" value={formData.email}
+                      onChange={handleChange} required
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                      placeholder="rahul@example.com"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: PAN */}
             {step === 3 && (
               <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-4 flex items-start">
-                  <CheckCircle className="text-primary mt-0.5 mr-3 flex-shrink-0" size={18} />
-                  <p className="text-sm text-blue-800">Your information is safe and encrypted. We only use this for official KYC verification.</p>
+                <div className="bg-blue-50 border border-blue-100 rounded-md p-4 flex items-start">
+                  <CheckCircle className="text-primary mt-0.5 mr-3 shrink-0" size={18} />
+                  <p className="text-sm text-blue-800">Your PAN is securely stored and used only for SEBI-compliant KYC verification. It is never shared with third parties.</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Enter your 10-digit PAN</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">PAN Card Number</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <CreditCard size={18} className="text-gray-400" />
-                    </div>
+                    <CreditCard size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
-                      type="text"
-                      name="pan"
+                      type="text" name="pan"
                       value={formData.pan}
-                      onChange={(e) => setFormData({...formData, pan: e.target.value.toUpperCase()})}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all uppercase"
+                      onChange={(e) => setFormData({ ...formData, pan: e.target.value.toUpperCase() })}
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all uppercase tracking-widest font-mono"
                       placeholder="ABCDE1234F"
-                      maxLength="10"
+                      maxLength={10}
+                      required
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Format: 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F)</p>
                 </div>
               </div>
             )}
 
+            {/* Step 4: Demat Account */}
             {step === 4 && (
+              <div className="space-y-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-md p-4 flex items-start">
+                  <AlertCircle className="text-amber-600 mt-0.5 mr-3 shrink-0" size={18} />
+                  <p className="text-sm text-amber-800">
+                    <strong>Demat Account (Optional at signup):</strong> A Demat account is required by SEBI to hold and transfer your ZCZP bonds. You can <strong>skip this step</strong> and link it later from your Account page.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Demat Account Number</label>
+                  <div className="relative">
+                    <Landmark size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text" name="dematAccountNumber"
+                      value={formData.dematAccountNumber}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono tracking-wider"
+                      placeholder="e.g. 1201910100123456 (optional)"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Your 16-digit DP ID + Client ID (found in your Demat statement)</p>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-xs text-gray-600">
+                  <p className="font-semibold mb-1">Where to find your Demat number?</p>
+                  <ul className="space-y-0.5">
+                    <li>• Zerodha / Groww / Upstox: Account Settings → Profile</li>
+                    <li>• Angel One / HDFC Sec: My Profile → Demat Details</li>
+                    <li>• Physical statement from your DP (Depository Participant)</li>
+                  </ul>
+                </div>
+
+                {/* Skip option */}
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-800">
+                  <p className="text-xs"><strong>💡 Don't have a Demat account yet?</strong> No worries! You can skip this step and link it later from your Account page. Open a free Demat account with Zerodha, Groww, Upstox, or Angel One.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Password */}
+            {step === 5 && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Create Password</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock size={18} className="text-gray-400" />
-                    </div>
+                    <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="••••••••"
+                      type="password" name="password" value={formData.password}
+                      onChange={handleChange} required minLength={6}
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                      placeholder="Minimum 6 characters"
                     />
                   </div>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-md p-3 text-sm text-green-800">
+                  <CheckCircle size={16} className="inline mr-2" />
+                  <strong>KYC Complete!</strong> After registration, you'll be able to invest in ZCZP bonds immediately.
                 </div>
               </div>
             )}
@@ -263,13 +332,12 @@ const Kyc = ({ setUser }) => {
               disabled={loading}
               className="w-full mt-8 flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 font-medium"
             >
-              {loading ? 'Verifying...' : step === 4 ? 'Complete Registration' : 'CONTINUE'}
-              {!loading && step < 4 && <ArrowRight size={18} className="ml-2" />}
+              {loading ? 'Processing...' : step === TOTAL_STEPS ? 'Complete Registration' : 'Continue'}
+              {!loading && step < TOTAL_STEPS && <ArrowRight size={18} className="ml-2" />}
             </button>
-            
           </form>
-          
-          <div className="mt-8 text-center">
+
+          <div className="mt-6 text-center">
             <button onClick={() => navigate('/auth')} className="text-sm text-gray-500 hover:text-primary">
               Already have an account? Login here
             </button>

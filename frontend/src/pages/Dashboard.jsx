@@ -61,8 +61,13 @@ export default function Dashboard() {
               const percent = Math.min(100, Math.round((ngo.raised / ngo.target) * 100));
               return (
                 <div key={ngo.id} className="card p-0 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-                  <div className="relative h-48">
-                    <img src={ngo.image} alt={ngo.name} className="w-full h-full object-cover" />
+                  <div className="relative h-48 bg-gray-100">
+                    <img
+                      src={ngo.image}
+                      alt={ngo.name}
+                      className="w-full h-full object-cover"
+                      onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&q=80'; }}
+                    />
                     <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded-md text-xs font-semibold text-primary flex items-center gap-1 shadow-sm">
                       <Verified className="w-3 h-3" /> 80G Tax Benefit
                     </div>

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Lock, Mail, User, Eye, EyeOff, AlertCircle, ServerCrash } from 'lucide-react';
 import axios from 'axios';
 
 export default function Auth({ setUser }) {
@@ -19,35 +19,45 @@ export default function Auth({ setUser }) {
     setError('');
     setLoading(true);
 
-    const email = emailRef.current.value;
+    const email = emailRef.current.value.trim();
     const password = passwordRef.current.value;
 
     try {
       if (isLogin) {
-        // Try real backend login
+        // ── Real backend login — no offline bypass ──
         const res = await axios.post('http://localhost:8080/api/auth/login', { email, password });
-        setUser(res.data.user);
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        const { token, user } = res.data;
+
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
         navigate('/dashboard');
+
       } else {
-        // Register
+        // ── Register new user ──
         const name = nameRef.current?.value || '';
         await axios.post('http://localhost:8080/api/auth/register', { name, email, password });
-        // Auto-login after register
+
+        // Auto-login after registration
         const res = await axios.post('http://localhost:8080/api/auth/login', { email, password });
-        setUser(res.data.user);
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        const { token, user } = res.data;
+
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
         navigate('/dashboard');
       }
     } catch (err) {
-      // Fallback: simulate login with form data (when backend is offline)
-      const name = isLogin
-        ? (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1))
-        : (nameRef.current?.value || email.split('@')[0]);
-      setUser({ name, email, kycVerified: false, impactPoints: 0 });
-      navigate('/dashboard');
+      // Show the real error — NO silent bypass
+      if (err.code === 'ERR_NETWORK' || err.code === 'ECONNREFUSED') {
+        setError('Cannot connect to server. Please make sure the backend is running on port 8080.');
+      } else if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err.response?.status === 401) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -62,7 +72,7 @@ export default function Auth({ setUser }) {
             Welcome to SSE Hub
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            {isLogin ? "Login to start investing" : "Create an account"}
+            {isLogin ? 'Login to start investing' : 'Create your investor account'}
           </p>
         </div>
 
@@ -78,15 +88,19 @@ export default function Auth({ setUser }) {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm flex items-center gap-2 border border-red-100">
-            <AlertCircle className="w-4 h-4 shrink-0" />{error}
+          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm flex items-start gap-2 border border-red-100">
+            {error.includes('server') || error.includes('backend')
+              ? <ServerCrash className="w-4 h-4 shrink-0 mt-0.5" />
+              : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            }
+            <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name (as per PAN)</label>
               <div className="relative flex items-center">
                 <User className="absolute left-3 text-gray-400 w-5 h-5" />
                 <input ref={nameRef} type="text" required className="block w-full pl-10 border border-gray-300 rounded-md focus:ring-primary focus:border-primary sm:text-sm px-4 py-2.5" placeholder="Rahul Sharma" />
@@ -123,6 +137,13 @@ export default function Auth({ setUser }) {
             </div>
           )}
         </form>
+
+        {/* KYC note for new users */}
+        {!isLogin && (
+          <div className="mt-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800">
+            ⚠️ After registration, you must complete KYC with your <strong>PAN card</strong> and <strong>Demat account number</strong> before purchasing ZCZP bonds.
+          </div>
+        )}
       </div>
     </div>
   );

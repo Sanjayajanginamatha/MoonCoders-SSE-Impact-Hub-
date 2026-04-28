@@ -1,15 +1,20 @@
 import { useState, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
-import { Info, Save, ShieldCheck, ShieldAlert, CheckCircle, CreditCard, Mail, Phone, User, Loader, Camera, Upload, Calendar, MapPin, Briefcase, Globe, Edit2, Star, TrendingUp, Zap } from 'lucide-react';
+import { Info, Save, ShieldCheck, ShieldAlert, CheckCircle, CreditCard, Mail, Phone, User, Loader, Camera, Upload, Calendar, MapPin, Briefcase, Landmark, Star, TrendingUp, Zap, AlertCircle } from 'lucide-react';
 import { getTierInfo } from '../utils/gamification';
+import axios from 'axios';
 
-const VALID_PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+const VALID_PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/
 
 export default function Account({ user, setUser }) {
   const [pan, setPan] = useState(user?.pan || '');
+  const [demat, setDemat] = useState(user?.dematAccountNumber || '');
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [panStatus, setPanStatus] = useState(user?.kycVerified ? 'verified' : 'idle');
+  const [panStatus, setPanStatus] = useState(user?.panVerified ? 'verified' : (user?.kycVerified ? 'verified' : 'idle'));
+  const [kycLoading, setKycLoading] = useState(false);
+  const [kycError, setKycError] = useState('');
+  const [kycSuccess, setKycSuccess] = useState('');
   const [saved, setSaved] = useState(false);
   
   // New profile fields
@@ -37,9 +42,91 @@ export default function Account({ user, setUser }) {
       return;
     }
     setPanStatus('verifying');
-    setTimeout(() => {
+    setTimeout(() => setPanStatus('verified'), 2000);
+  };
+
+  // Submit KYC to backend — saves PAN + Demat permanently
+  const submitKyc = async () => {
+    setKycError('');
+    setKycSuccess('');
+    if (!VALID_PAN_REGEX.test(pan)) {
+      setKycError('Invalid PAN format. Must be like ABCDE1234F');
+      return;
+    }
+    if (!demat.trim() || demat.trim().length < 8) {
+      setKycError('Please enter a valid Demat account number (minimum 8 characters).');
+      return;
+    }
+    setKycLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        'http://localhost:8080/api/auth/kyc',
+        { pan: pan.toUpperCase(), dematAccountNumber: demat },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const updatedUser = res.data.user;
+      setUser(updatedUser);
+      setKycSuccess('KYC verified! You can now purchase ZCZP bonds.');
       setPanStatus('verified');
-    }, 2000);
+    } catch (err) {
+      setKycError(err.response?.data?.error || 'KYC submission failed. Please try again.');
+    } finally {
+      setKycLoading(false);
+    }
+  };
+
+  // Verify PAN only (without Demat) — for donors who don't have a Demat account yet
+  const verifyPanOnly = async () => {
+    setKycError('');
+    setKycSuccess('');
+    if (!VALID_PAN_REGEX.test(pan)) {
+      setKycError('Invalid PAN format. Must be like ABCDE1234F');
+      return;
+    }
+    setKycLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        'http://localhost:8080/api/auth/verify-pan',
+        { pan: pan.toUpperCase() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const updatedUser = res.data.user;
+      setUser(updatedUser);
+      setPanStatus('verified');
+      setKycSuccess(res.data.message || 'PAN verified successfully!');
+    } catch (err) {
+      setKycError(err.response?.data?.error || 'PAN verification failed. Please try again.');
+    } finally {
+      setKycLoading(false);
+    }
+  };
+
+  // Link Demat account only — for donors who already have PAN verified
+  const linkDematOnly = async () => {
+    setKycError('');
+    setKycSuccess('');
+    if (!demat.trim() || demat.trim().length < 8) {
+      setKycError('Please enter a valid Demat account number (minimum 8 characters).');
+      return;
+    }
+    setKycLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        'http://localhost:8080/api/auth/link-demat',
+        { dematAccountNumber: demat },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const updatedUser = res.data.user;
+      setUser(updatedUser);
+      setKycSuccess(res.data.message || 'Demat account linked successfully!');
+    } catch (err) {
+      setKycError(err.response?.data?.error || 'Demat linking failed. Please try again.');
+    } finally {
+      setKycLoading(false);
+    }
   };
 
   const handleSave = (e) => {
@@ -96,21 +183,29 @@ export default function Account({ user, setUser }) {
 
           {/* KYC Status Banner */}
           <div className={`rounded-xl p-4 flex items-center gap-4 border ${
-            panStatus === 'verified'
+            user?.kycVerified
               ? 'bg-green-50 border-green-200 text-green-800'
-              : 'bg-amber-50 border-amber-200 text-amber-800'
+              : user?.panVerified
+                ? 'bg-blue-50 border-blue-200 text-blue-800'
+                : 'bg-amber-50 border-amber-200 text-amber-800'
           }`}>
-            {panStatus === 'verified'
+            {user?.kycVerified
               ? <ShieldCheck className="w-6 h-6 text-green-600 shrink-0" />
               : <ShieldAlert className="w-6 h-6 text-amber-500 shrink-0" />}
-            <div>
+            <div className="flex-1">
               <p className="font-semibold text-sm">
-                {panStatus === 'verified' ? 'KYC Verified — You can claim 80G benefits' : 'KYC Pending — Verify your PAN to unlock 80G benefits'}
+                {user?.kycVerified
+                  ? '✅ KYC Verified — You can buy ZCZP bonds & claim 80G benefits'
+                  : user?.panVerified
+                    ? '🔵 PAN Verified — Link your Demat account to complete KYC and start investing'
+                    : '⚠️ KYC Incomplete — Verify your PAN Card and link Demat Account to invest in ZCZP bonds'}
               </p>
               <p className="text-xs mt-0.5 opacity-75">
-                {panStatus === 'verified'
-                  ? 'Your PAN has been verified. 80G certificates will be auto-generated after each investment.'
-                  : 'PAN is mandatory for claiming Section 80G tax deductions under Income Tax Act.'}
+                {user?.kycVerified
+                  ? `PAN: ${user.pan} | Demat: ${user.dematAccountNumber}`
+                  : user?.panVerified
+                    ? `PAN: ${user.pan} ✅ | Demat: Not linked yet`
+                    : 'Both PAN card and Demat account are mandatory as per SEBI & Income Tax Act.'}
               </p>
             </div>
           </div>
@@ -350,70 +445,198 @@ export default function Account({ user, setUser }) {
           </div>
 
 
-          {/* PAN Verification Card */}
+          {/* KYC Card — PAN + Demat (supports separate verification) */}
           <div className="card p-6">
             <h3 className="text-lg font-bold text-secondary border-b border-border pb-3 mb-5 flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-primary" />
-              PAN Verification
+              <ShieldCheck className="w-5 h-5 text-primary" />
+              KYC Verification (Required for ZCZP Bonds)
             </h3>
 
             <div className="bg-sky-50 border border-sky-100 rounded-lg p-3 mb-5 flex items-start gap-2">
               <Info className="w-4 h-4 text-sky-600 mt-0.5 shrink-0" />
               <p className="text-xs text-sky-700">
-                Enter your 10-digit PAN (e.g. ABCDE1234F). This is verified against NSDL database for 80G eligibility.
-                Your data is encrypted and never shared.
+                Both your <strong>PAN Card</strong> and <strong>Demat Account</strong> are mandatory before you can invest in ZCZP bonds.
+                This is required under SEBI regulations and the Income Tax Act for 80G benefits.
+                {!user?.kycVerified && user?.panVerified && (
+                  <span className="block mt-1 text-amber-700 font-semibold">
+                    ✅ PAN is verified! Now link your Demat account to complete KYC.
+                  </span>
+                )}
               </p>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number</label>
-                <div className="relative flex items-center">
-                  <CreditCard className="absolute left-3 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    value={pan}
-                    onChange={handlePanChange}
-                    maxLength={10}
-                    placeholder="ABCDE1234F"
-                    disabled={panStatus === 'verified'}
-                    className={`block w-full pl-9 pr-10 border rounded-md px-4 py-2.5 text-sm font-mono uppercase tracking-widest transition-colors ${getPanBorderColor()} ${panStatus === 'verified' ? 'bg-green-50' : ''}`}
-                  />
-                  {/* Status icon */}
-                  <div className="absolute right-3">
-                    {panStatus === 'verifying' && <Loader className="w-4 h-4 text-primary animate-spin" />}
-                    {panStatus === 'verified' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                    {panStatus === 'failed' && <ShieldAlert className="w-4 h-4 text-red-500" />}
+            {/* Individual Verification Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+              <div className={`rounded-lg p-3 border flex items-center gap-3 ${
+                user?.panVerified 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-red-50 border-red-200'
+              }`}>
+                {user?.panVerified 
+                  ? <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                  : <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />}
+                <div>
+                  <p className={`font-semibold text-sm ${user?.panVerified ? 'text-green-700' : 'text-red-600'}`}>
+                    PAN Card {user?.panVerified ? 'Verified' : 'Not Verified'}
+                  </p>
+                  {user?.panVerified && user?.pan && (
+                    <p className="text-xs text-green-600 font-mono">{user.pan}</p>
+                  )}
+                </div>
+              </div>
+              <div className={`rounded-lg p-3 border flex items-center gap-3 ${
+                user?.dematAccountNumber 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-red-50 border-red-200'
+              }`}>
+                {user?.dematAccountNumber 
+                  ? <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                  : <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />}
+                <div>
+                  <p className={`font-semibold text-sm ${user?.dematAccountNumber ? 'text-green-700' : 'text-red-600'}`}>
+                    Demat Account {user?.dematAccountNumber ? 'Linked' : 'Not Linked'}
+                  </p>
+                  {user?.dematAccountNumber && (
+                    <p className="text-xs text-green-600 font-mono">{user.dematAccountNumber}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {kycError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded border border-red-100 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />{kycError}
+              </div>
+            )}
+            {kycSuccess && (
+              <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded border border-green-100 flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />{kycSuccess}
+              </div>
+            )}
+
+            <div className="space-y-5">
+              {/* Section 1: PAN Verification */}
+              <div className={`border rounded-xl p-5 ${user?.panVerified ? 'bg-green-50/50 border-green-200' : 'border-border'}`}>
+                <h4 className="font-semibold text-secondary mb-3 flex items-center gap-2 text-sm">
+                  <CreditCard className="w-4 h-4 text-primary" />
+                  Step 1: PAN Card Verification
+                  {user?.panVerified && <span className="text-green-600 text-xs ml-auto">✅ Complete</span>}
+                </h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">PAN Card Number</label>
+                  <div className="relative flex items-center">
+                    <CreditCard className="absolute left-3 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      value={pan}
+                      onChange={handlePanChange}
+                      maxLength={10}
+                      placeholder="ABCDE1234F"
+                      disabled={user?.panVerified}
+                      className={`block w-full pl-9 pr-10 border rounded-md px-4 py-2.5 text-sm font-mono uppercase tracking-widest transition-colors ${getPanBorderColor()} ${user?.panVerified ? 'bg-green-50' : ''}`}
+                    />
+                    <div className="absolute right-3">
+                      {user?.panVerified && <CheckCircle className="w-4 h-4 text-green-500" />}
+                      {panStatus === 'failed' && <ShieldAlert className="w-4 h-4 text-red-500" />}
+                    </div>
                   </div>
+                  {panStatus === 'failed' && <p className="text-red-500 text-xs mt-1">Invalid PAN. Format: ABCDE1234F</p>}
                 </div>
 
-                {/* Status messages */}
-                {panStatus === 'failed' && (
-                  <p className="text-red-500 text-xs mt-1">Invalid PAN format. PAN should be like ABCDE1234F.</p>
-                )}
-                {panStatus === 'verifying' && (
-                  <p className="text-primary text-xs mt-1 animate-pulse">Verifying with NSDL database...</p>
-                )}
-                {panStatus === 'verified' && (
-                  <p className="text-green-600 text-xs mt-1 font-medium flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> PAN verified successfully! 80G benefits unlocked.
-                  </p>
+                {!user?.panVerified && (
+                  <button
+                    onClick={verifyPanOnly}
+                    disabled={kycLoading || pan.length !== 10}
+                    className="btn btn-primary flex items-center gap-2 mt-3 disabled:opacity-60"
+                  >
+                    {kycLoading ? <Loader className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    {kycLoading ? 'Verifying PAN...' : 'Verify PAN Only'}
+                  </button>
                 )}
               </div>
 
-              <div className="mt-6">
-                <button
-                  onClick={verifyPan}
-                  disabled={pan.length !== 10 || panStatus === 'verifying' || panStatus === 'verified'}
-                  className={`btn py-2.5 px-5 text-sm whitespace-nowrap ${
-                    panStatus === 'verified'
-                      ? 'bg-green-100 text-green-700 border border-green-300 cursor-not-allowed'
-                      : 'btn-primary disabled:opacity-50 disabled:cursor-not-allowed'
-                  }`}
-                >
-                  {panStatus === 'verifying' ? 'Verifying...' : panStatus === 'verified' ? '✓ Verified' : 'Verify PAN'}
-                </button>
+              {/* Section 2: Demat Account Linking */}
+              <div className={`border rounded-xl p-5 ${user?.dematAccountNumber ? 'bg-green-50/50 border-green-200' : 'border-border'}`}>
+                <h4 className="font-semibold text-secondary mb-3 flex items-center gap-2 text-sm">
+                  <Landmark className="w-4 h-4 text-primary" />
+                  Step 2: Demat Account Linking
+                  {user?.dematAccountNumber && <span className="text-green-600 text-xs ml-auto">✅ Complete</span>}
+                </h4>
+
+                {/* Help box if no Demat */}
+                {!user?.dematAccountNumber && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                    <p className="text-xs font-bold text-amber-800 mb-1">💡 Don't have a Demat account?</p>
+                    <p className="text-xs text-amber-700 mb-2">
+                      A Demat account is mandatory to hold ZCZP bonds as per SEBI regulations. 
+                      You can open a <strong>free Demat account</strong> in just a few minutes with any of these SEBI-registered brokers:
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      <span className="text-xs bg-white border border-amber-200 px-2.5 py-1 rounded-full text-amber-800 font-medium">🟢 Zerodha</span>
+                      <span className="text-xs bg-white border border-amber-200 px-2.5 py-1 rounded-full text-amber-800 font-medium">🟣 Groww</span>
+                      <span className="text-xs bg-white border border-amber-200 px-2.5 py-1 rounded-full text-amber-800 font-medium">🔵 Upstox</span>
+                      <span className="text-xs bg-white border border-amber-200 px-2.5 py-1 rounded-full text-amber-800 font-medium">🔴 Angel One</span>
+                      <span className="text-xs bg-white border border-amber-200 px-2.5 py-1 rounded-full text-amber-800 font-medium">🟠 HDFC Securities</span>
+                    </div>
+                    <p className="text-xs text-amber-600">
+                      Once opened, come back here and enter your 16-digit Demat number (DP ID + Client ID).
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Demat Account Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Landmark className="absolute left-3 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      value={demat}
+                      onChange={e => setDemat(e.target.value)}
+                      placeholder="e.g. 1201910100123456"
+                      disabled={user?.kycVerified}
+                      className={`block w-full pl-9 border rounded-md px-4 py-2.5 text-sm font-mono tracking-wider transition-colors border-gray-300 focus:ring-primary focus:border-primary ${user?.kycVerified ? 'bg-green-50' : ''}`}
+                    />
+                    {user?.dematAccountNumber && (
+                      <div className="absolute right-3"><CheckCircle className="w-4 h-4 text-green-500" /></div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">16-digit DP ID + Client ID from Zerodha / Groww / Upstox / Angel One</p>
+                </div>
+
+                {!user?.kycVerified && (
+                  <button
+                    onClick={linkDematOnly}
+                    disabled={kycLoading || !demat.trim() || demat.trim().length < 8}
+                    className="btn btn-primary flex items-center gap-2 mt-3 disabled:opacity-60"
+                  >
+                    {kycLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Landmark className="w-4 h-4" />}
+                    {kycLoading ? 'Linking Demat...' : 'Link Demat Account'}
+                  </button>
+                )}
               </div>
+
+              {/* Combined Submit — both at once */}
+              {!user?.kycVerified && !user?.panVerified && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs text-gray-500 mb-3">Or submit both PAN and Demat together:</p>
+                  <button
+                    onClick={submitKyc}
+                    disabled={kycLoading}
+                    className="btn btn-primary flex items-center gap-2 disabled:opacity-60"
+                  >
+                    {kycLoading ? <Loader className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    {kycLoading ? 'Submitting KYC...' : 'Submit Full KYC (PAN + Demat)'}
+                  </button>
+                </div>
+              )}
+
+              {user?.kycVerified && (
+                <p className="text-green-600 text-sm font-medium flex items-center gap-2 bg-green-50 p-3 rounded-lg border border-green-200">
+                  <CheckCircle className="w-4 h-4" /> KYC Complete — ZCZP bond investment unlocked!
+                </p>
+              )}
             </div>
           </div>
 

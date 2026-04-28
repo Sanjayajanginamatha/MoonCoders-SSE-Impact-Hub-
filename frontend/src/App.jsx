@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import AIAssistant from './components/AIAssistant';
 import Landing from './pages/Landing';
@@ -15,26 +15,45 @@ import Notifications from './pages/Notifications';
 import { ThemeProvider } from './components/ThemeProvider';
 
 function App() {
-  const [user, setUser] = useState(null);
+  // Restore user from localStorage on page load/refresh
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [portfolio, setPortfolio] = useState([]);
+
+  // Sync user changes to localStorage
+  const handleSetUser = (newUser) => {
+    setUser(newUser);
+    if (newUser) {
+      localStorage.setItem('user', JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    }
+  };
 
   return (
     <ThemeProvider>
       <Router>
         <div className="min-h-screen flex flex-col bg-background text-secondary transition-colors duration-200">
-          <Navbar user={user} setUser={setUser} />
-          
+          <Navbar user={user} setUser={handleSetUser} />
+
           <div className="flex-1 flex flex-col">
             <Routes>
               <Route path="/" element={<Landing />} />
-              <Route path="/kyc" element={<Kyc setUser={setUser} />} />
-              <Route path="/auth" element={<Auth setUser={setUser} />} />
+              <Route path="/kyc" element={<Kyc setUser={handleSetUser} />} />
+              <Route path="/auth" element={<Auth setUser={handleSetUser} />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/auth" />} />
-              <Route path="/ngo/:id" element={user ? <NgoDetail user={user} setUser={setUser} portfolio={portfolio} setPortfolio={setPortfolio} /> : <Navigate to="/auth" />} />
+              <Route path="/ngo/:id" element={user ? <NgoDetail user={user} setUser={handleSetUser} portfolio={portfolio} setPortfolio={setPortfolio} /> : <Navigate to="/auth" />} />
               <Route path="/portfolio" element={user ? <Portfolio portfolio={portfolio} user={user} /> : <Navigate to="/auth" />} />
               <Route path="/rank" element={user ? <Rank user={user} /> : <Navigate to="/auth" />} />
-              <Route path="/account" element={user ? <Account user={user} setUser={setUser} /> : <Navigate to="/auth" />} />
+              <Route path="/account" element={user ? <Account user={user} setUser={handleSetUser} /> : <Navigate to="/auth" />} />
               <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/auth" />} />
             </Routes>
           </div>

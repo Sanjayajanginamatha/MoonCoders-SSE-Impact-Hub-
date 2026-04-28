@@ -2,9 +2,10 @@ import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { ngos } from '../data/mockData';
+import axios from 'axios';
 import {
   ArrowLeft, Verified, TrendingUp, Info, CheckCircle,
-  QrCode, Download, X, Smartphone, Clock, Shield
+  Download, X, Smartphone, Clock, Shield, AlertTriangle
 } from 'lucide-react';
 
 // Payment QR — uses static image from /public/payment-qr.jpg
@@ -165,36 +166,81 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
 
   const [amount, setAmount] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [paymentStep, setPaymentStep] = useState('qr'); // 'qr' | 'success'
-  const [txnId] = useState(() => 'TXN-' + Math.floor(Math.random() * 900000 + 100000));
+  const [paymentStep, setPaymentStep] = useState('qr'); // 'qr' | 'success' | 'kyc-required'
+  const [txnId, setTxnId] = useState('');
+  const [payError, setPayError] = useState('');
+  const [imgError, setImgError] = useState(false);
   const investDate = useRef(new Date().toISOString());
 
-  if (!ngo) return <div>NGO not found</div>;
+  if (!ngo) return <div className="p-8 text-center text-gray-500">NGO not found</div>;
 
   const percent = Math.min(100, Math.round((ngo.raised / ngo.target) * 100));
 
+  // Get current user from localStorage (always fresh)
+  const currentUser = user || JSON.parse(localStorage.getItem('user') || 'null');
+
   const handlePayment = () => {
     if (!amount || amount < 1000) {
-      alert("Minimum investment is ₹1000");
+      alert('Minimum investment is ₹1,000');
       return;
     }
+    // Check KYC before even showing modal
+    if (!currentUser?.kycVerified) {
+      setPaymentStep('kyc-required');
+      setShowModal(true);
+      return;
+    }
+    setPayError('');
     setShowModal(true);
     setPaymentStep('qr');
   };
 
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
+    setPayError('');
     const investAmount = Number(amount) || 0;
-    setPaymentStep('success');
-    setPortfolio([...portfolio, { ngo, amount: investAmount, date: investDate.current, txnId }]);
-    ngo.raised += investAmount;
-    
-    // Award 100 points per ₹1000 invested
-    const pointsEarned = Math.floor(investAmount / 10);
-    if (setUser) {
-      setUser(prev => ({
-        ...prev,
-        impactPoints: (prev.impactPoints || 0) + pointsEarned
-      }));
+    const token = localStorage.getItem('token');
+
+    try {
+      const res = await axios.post(
+        'http://localhost:8080/api/invest',
+        { ngoId: ngo.id, amount: investAmount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const savedInvestment = res.data.investment || {};
+      const generatedTxnId = savedInvestment.transactionId || ('ZCZP-' + Math.random().toString(36).substr(2, 8).toUpperCase());
+      setTxnId(generatedTxnId);
+      setPaymentStep('success');
+
+      // Update local portfolio state
+      setPortfolio([...portfolio, {
+        ngo,
+        amount: investAmount,
+        date: investDate.current,
+        txnId: generatedTxnId
+      }]);
+
+      // Mutate in-memory NGO raised amount so UI updates
+      ngo.raised += investAmount;
+
+      // Award impact points
+      const pointsEarned = Math.floor(investAmount / 10);
+      if (setUser) {
+        setUser(prev => {
+          const updated = { ...prev, impactPoints: (prev?.impactPoints || 0) + pointsEarned };
+          localStorage.setItem('user', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    } catch (err) {
+      const errData = err.response?.data;
+      if (errData?.action === 'COMPLETE_KYC') {
+        setPaymentStep('kyc-required');
+      } else if (err.code === 'ERR_NETWORK') {
+        setPayError('Cannot connect to server. Please ensure the backend is running.');
+      } else {
+        setPayError(errData?.error || errData?.message || 'Payment failed. Please try again.');
+      }
     }
   };
 
@@ -216,8 +262,13 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
         </button>
 
         <div className="card p-0 overflow-hidden flex flex-col xl:flex-row">
-          <div className="xl:w-2/5 h-64 xl:h-auto relative">
-            <img src={ngo.image} alt={ngo.name} className="w-full h-full object-cover" />
+          <div className="xl:w-2/5 h-64 xl:h-auto relative bg-gray-100">
+            <img
+              src={imgError ? 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&q=80' : ngo.image}
+              alt={ngo.name}
+              className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
+            />
           </div>
           <div className="xl:w-3/5 p-8">
             <div className="flex justify-between items-start mb-4">
@@ -331,6 +382,99 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
                   </button>
                 </div>
               </>
+            ) : paymentStep === 'kyc-required' ? (
+              <>
+                {/* KYC Blocking Step — PAN & Demat verification required */}
+                <div className="bg-gradient-to-br from-amber-500 to-red-500 text-white px-6 py-5 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold">⚠️ Verification Required</h2>
+                    <p className="text-amber-100 text-sm mt-0.5">Complete KYC to invest in ZCZP bonds</p>
+                  </div>
+                  <button onClick={closeModal} className="bg-white/20 hover:bg-white/30 rounded-full p-1.5">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="p-6">
+                  <div className="text-center mb-5">
+                    <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertTriangle className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-bold text-secondary mb-2">PAN & Demat Verification Pending</h3>
+                    <p className="text-gray-600 text-sm">
+                      As per SEBI regulations, you must verify your <strong>PAN Card</strong> and link your <strong>Demat Account</strong> before investing in Zero Coupon Zero Principal (ZCZP) bonds.
+                    </p>
+                  </div>
+
+                  {/* Checklist of what's needed */}
+                  <div className="bg-gray-50 rounded-xl p-4 border border-border mb-5 space-y-3">
+                    <div className="flex items-center gap-3">
+                      {currentUser?.panVerified ? (
+                        <div className="w-7 h-7 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
+                          <CheckCircle className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 bg-red-100 text-red-500 rounded-full flex items-center justify-center shrink-0">
+                          <AlertTriangle className="w-4 h-4" />
+                        </div>
+                      )}
+                      <div>
+                        <p className={`font-semibold text-sm ${currentUser?.panVerified ? 'text-green-700' : 'text-red-600'}`}>
+                          {currentUser?.panVerified ? 'PAN Card Verified ✅' : 'PAN Card — Not Verified'}
+                        </p>
+                        <p className="text-xs text-gray-500">Required for 80G tax deduction & SEBI compliance</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {currentUser?.dematAccountNumber ? (
+                        <div className="w-7 h-7 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
+                          <CheckCircle className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 bg-red-100 text-red-500 rounded-full flex items-center justify-center shrink-0">
+                          <AlertTriangle className="w-4 h-4" />
+                        </div>
+                      )}
+                      <div>
+                        <p className={`font-semibold text-sm ${currentUser?.dematAccountNumber ? 'text-green-700' : 'text-red-600'}`}>
+                          {currentUser?.dematAccountNumber ? 'Demat Account Linked ✅' : 'Demat Account — Not Linked'}
+                        </p>
+                        <p className="text-xs text-gray-500">SEBI mandates Demat to hold ZCZP bonds electronically</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Help for users without Demat */}
+                  {!currentUser?.dematAccountNumber && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5">
+                      <p className="text-xs font-bold text-blue-800 mb-1">💡 Don't have a Demat account?</p>
+                      <p className="text-xs text-blue-700 mb-2">Open a free Demat account in minutes with any of these SEBI-registered brokers:</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="text-xs bg-white border border-blue-200 px-2 py-1 rounded-full text-blue-700 font-medium">Zerodha</span>
+                        <span className="text-xs bg-white border border-blue-200 px-2 py-1 rounded-full text-blue-700 font-medium">Groww</span>
+                        <span className="text-xs bg-white border border-blue-200 px-2 py-1 rounded-full text-blue-700 font-medium">Upstox</span>
+                        <span className="text-xs bg-white border border-blue-200 px-2 py-1 rounded-full text-blue-700 font-medium">Angel One</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => { closeModal(); navigate('/account'); }}
+                      className="w-full btn btn-primary py-3 flex items-center justify-center gap-2"
+                    >
+                      <Shield className="w-5 h-5" />
+                      Go to Account & Complete Verification
+                    </button>
+                    <button
+                      onClick={closeModal}
+                      className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </>
             ) : (
               <>
                 {/* Success Step */}
@@ -343,7 +487,7 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
 
                   <div className="bg-gray-50 rounded-xl p-4 text-left border border-border mb-5 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Transaction ID</span>
+                      <span className="text-gray-500">Bond ID</span>
                       <span className="font-mono font-semibold text-secondary">{txnId}</span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -353,6 +497,10 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">80G Deduction</span>
                       <span className="font-semibold text-green-600">₹{Number(amount || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Held in Demat</span>
+                      <span className="font-mono font-semibold text-secondary text-xs">{currentUser?.dematAccountNumber}</span>
                     </div>
                   </div>
 
