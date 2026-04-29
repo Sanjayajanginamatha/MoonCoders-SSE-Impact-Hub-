@@ -46,16 +46,20 @@ const Kyc = ({ setUser }) => {
       setError('Please enter your email address.'); return;
     }
     if (step === 3) {
-      if (!formData.pan.trim()) { setError('Please enter your PAN number.'); return; }
-      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan)) {
+      const panVal = formData.pan.trim().toUpperCase();
+      if (!panVal) { setError('Please enter your PAN number.'); return; }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panVal)) {
         setError('Invalid PAN format. Should be like ABCDE1234F (5 letters, 4 digits, 1 letter).'); return;
       }
+      setFormData(prev => ({ ...prev, pan: panVal }));
     }
     if (step === 4) {
       // Demat is optional during registration — can be linked later
-      if (formData.dematAccountNumber.trim() && formData.dematAccountNumber.trim().length < 8) {
-        setError('Demat account number must be at least 8 characters if provided.'); return;
+      const dematVal = formData.dematAccountNumber.trim().toUpperCase();
+      if (dematVal && dematVal.length !== 16) {
+        setError('Demat account number must be exactly 16 characters if provided.'); return;
       }
+      setFormData(prev => ({ ...prev, dematAccountNumber: dematVal }));
     }
     setStep(step + 1);
   };
@@ -282,8 +286,9 @@ const Kyc = ({ setUser }) => {
                     <input
                       type="text" name="dematAccountNumber"
                       value={formData.dematAccountNumber}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono tracking-wider"
+                      onChange={(e) => setFormData({ ...formData, dematAccountNumber: e.target.value.toUpperCase().replace(/\s/g, '') })}
+                      maxLength={16}
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono tracking-wider uppercase"
                       placeholder="e.g. 1201910100123456 (optional)"
                     />
                   </div>

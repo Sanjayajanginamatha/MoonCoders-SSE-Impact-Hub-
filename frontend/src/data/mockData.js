@@ -1,18 +1,44 @@
+import AkshayaPatra from "../assets/demo iage/Akshaya Patra Foundation.png";
+import TeachForIndia from "../assets/demo iage/Teach For India.png";
+import SanjivaniHealth from "../assets/demo iage/Sanjivani Health Trust.png";
+import GreenEarth from "../assets/demo iage/Green Earth Initiative.png";
+import Goonj from "../assets/demo iage/Goonj.png";
+import HelpAgeIndia from "../assets/demo iage/HelpAge India.png";
+import SmileFoundation from "../assets/demo iage/Smile Foundation.png";
+import Pratham from "../assets/demo iage/Pratham.png";
+import KailashSatyarthi from "../assets/demo iage/Kailash Satyarthi Children's Foundation.png";
+import WaterAidIndia from "../assets/demo iage/WaterAid India.png";
+import CRY from "../assets/demo iage/CRY (Child Rights and You).png";
+import OxfamIndia from "../assets/demo iage/Oxfam India.png";
+import WWFIndia from "../assets/demo iage/WWF India.png";
+import SewaRural from "../assets/demo iage/Sewa Rural.png";
+import MagicBus from "../assets/demo iage/Magic Bus.png";
+import AgastyaFoundation from "../assets/demo iage/Agastya International Foundation.png";
+import BarefootCollege from "../assets/demo iage/Barefoot College.png";
+import SalaamBaalak from "../assets/demo iage/Salaam Baalak Trust.png";
+import NaandiFoundation from "../assets/demo iage/Naandi Foundation.png";
+import WildlifeSOS from "../assets/demo iage/Wildlife SOS.png";
+import Bhumi from "../assets/demo iage/Bhumi.png";
+import Snehalaya from "../assets/demo iage/Snehalaya.png";
+import HabitatHumanity from "../assets/demo iage/Habitat for Humanity India.png";
+import UdayanCare from "../assets/demo iage/Udayan Care.png";
+
 export const ngos = [
   {
     id: 1,
     name: "Akshaya Patra Foundation",
-    image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=800",
+    image: AkshayaPatra,
     raised: 3750000,
     target: 5000000,
     sdgs: ["Zero Hunger", "Good Health"],
     description: "Providing mid-day meals to school children across India to eliminate classroom hunger and facilitate education.",
-    impact: "Feeds 2 Million+ children daily."
+    impact: "Feeds 2 Million+ children daily.",
+    address: "Bangalore, Karnataka, India"
   },
   {
     id: 2,
     name: "Teach For India",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800",
+    image: TeachForIndia,
     raised: 1200000,
     target: 2000000,
     sdgs: ["Quality Education", "Reduced Inequalities"],
@@ -22,7 +48,7 @@ export const ngos = [
   {
     id: 3,
     name: "Sanjivani Health Trust",
-    image: "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=800",
+    image: SanjivaniHealth,
     raised: 800000,
     target: 1000000,
     sdgs: ["Good Health", "Clean Water"],
@@ -32,7 +58,7 @@ export const ngos = [
   {
     id: 4,
     name: "Green Earth Initiative",
-    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=800",
+    image: GreenEarth,
     raised: 4500000,
     target: 6000000,
     sdgs: ["Climate Action", "Life on Land"],
@@ -42,7 +68,7 @@ export const ngos = [
   {
     id: 5,
     name: "Goonj",
-    image: "https://images.unsplash.com/photo-1532629345422-7515f3d16bb0?w=500&q=80",
+    image: Goonj,
     raised: 2800000,
     target: 4000000,
     sdgs: ["No Poverty", "Reduced Inequalities"],
@@ -52,7 +78,7 @@ export const ngos = [
   {
     id: 6,
     name: "HelpAge India",
-    image: "https://images.unsplash.com/photo-1513159446162-54eb8bdaa79ea?auto=format&fit=crop&q=80&w=800",
+    image: HelpAgeIndia,
     raised: 1500000,
     target: 2500000,
     sdgs: ["Good Health", "Reduced Inequalities"],
@@ -62,7 +88,7 @@ export const ngos = [
   {
     id: 7,
     name: "Smile Foundation",
-    image: "https://images.unsplash.com/photo-1603525547614-72b14e9f5641?auto=format&fit=crop&q=80&w=800",
+    image: SmileFoundation,
     raised: 3100000,
     target: 4500000,
     sdgs: ["Quality Education", "Good Health"],
@@ -72,7 +98,7 @@ export const ngos = [
   {
     id: 8,
     name: "Pratham",
-    image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=500&q=80",
+    image: Pratham,
     raised: 5500000,
     target: 8000000,
     sdgs: ["Quality Education"],
@@ -82,7 +108,7 @@ export const ngos = [
   {
     id: 9,
     name: "Kailash Satyarthi Children's Foundation",
-    image: "https://images.unsplash.com/photo-1610444315263-d1df5d4dfc87?w=500&q=80",
+    image: KailashSatyarthi,
     raised: 4200000,
     target: 5000000,
     sdgs: ["Peace and Justice", "Quality Education"],
@@ -92,7 +118,7 @@ export const ngos = [
   {
     id: 10,
     name: "WaterAid India",
-    image: "https://images.unsplash.com/photo-1536939459926-301728717817?w=500&q=80",
+    image: WaterAidIndia,
     raised: 1800000,
     target: 3000000,
     sdgs: ["Clean Water", "Sanitation"],
@@ -102,7 +128,7 @@ export const ngos = [
   {
     id: 11,
     name: "CRY (Child Rights and You)",
-    image: "https://images.unsplash.com/photo-1542810634-71277d95dc8c?w=500&q=80",
+    image: CRY,
     raised: 2900000,
     target: 4000000,
     sdgs: ["Quality Education", "Reduced Inequalities"],
@@ -112,7 +138,7 @@ export const ngos = [
   {
     id: 12,
     name: "Oxfam India",
-    image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=500&q=80",
+    image: OxfamIndia,
     raised: 3600000,
     target: 6000000,
     sdgs: ["No Poverty", "Gender Equality"],
@@ -122,7 +148,7 @@ export const ngos = [
   {
     id: 13,
     name: "WWF India",
-    image: "https://images.unsplash.com/photo-1564750975191-0ed807751f3b?w=500&q=80",
+    image: WWFIndia,
     raised: 6800000,
     target: 10000000,
     sdgs: ["Climate Action", "Life on Land"],
@@ -132,7 +158,7 @@ export const ngos = [
   {
     id: 14,
     name: "Sewa Rural",
-    image: "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?w=500&q=80",
+    image: SewaRural,
     raised: 850000,
     target: 1500000,
     sdgs: ["Good Health", "Gender Equality"],
@@ -142,7 +168,7 @@ export const ngos = [
   {
     id: 15,
     name: "Magic Bus",
-    image: "https://images.unsplash.com/photo-1526976663112-005080928373?w=500&q=80",
+    image: MagicBus,
     raised: 2400000,
     target: 3500000,
     sdgs: ["Quality Education", "Decent Work"],
@@ -152,7 +178,7 @@ export const ngos = [
   {
     id: 16,
     name: "Agastya International Foundation",
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=500&q=80",
+    image: AgastyaFoundation,
     raised: 1750000,
     target: 2800000,
     sdgs: ["Quality Education", "Industry, Innovation"],
@@ -162,7 +188,7 @@ export const ngos = [
   {
     id: 17,
     name: "Barefoot College",
-    image: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=500&q=80",
+    image: BarefootCollege,
     raised: 3300000,
     target: 4500000,
     sdgs: ["Quality Education", "Affordable Energy"],
@@ -172,7 +198,7 @@ export const ngos = [
   {
     id: 18,
     name: "Salaam Baalak Trust",
-    image: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=500&q=80",
+    image: SalaamBaalak,
     raised: 950000,
     target: 1500000,
     sdgs: ["No Poverty", "Zero Hunger"],
@@ -182,7 +208,7 @@ export const ngos = [
   {
     id: 19,
     name: "Naandi Foundation",
-    image: "https://images.unsplash.com/photo-1504951478201-d70377484df7?w=500&q=80",
+    image: NaandiFoundation,
     raised: 2100000,
     target: 3000000,
     sdgs: ["Zero Hunger", "Clean Water"],
@@ -192,7 +218,7 @@ export const ngos = [
   {
     id: 20,
     name: "Wildlife SOS",
-    image: "https://images.unsplash.com/photo-1564750438137-b956037a34bd?w=500&q=80",
+    image: WildlifeSOS,
     raised: 1650000,
     target: 2000000,
     sdgs: ["Life on Land", "Climate Action"],
@@ -202,7 +228,7 @@ export const ngos = [
   {
     id: 21,
     name: "Bhumi",
-    image: "https://images.unsplash.com/photo-1529390079861-591de354faf5?w=500&q=80",
+    image: Bhumi,
     raised: 550000,
     target: 1200000,
     sdgs: ["Quality Education", "Climate Action"],
@@ -212,7 +238,7 @@ export const ngos = [
   {
     id: 22,
     name: "Snehalaya",
-    image: "https://images.unsplash.com/photo-1518133501308-4171dfd46817?w=500&q=80",
+    image: Snehalaya,
     raised: 1100000,
     target: 1800000,
     sdgs: ["Good Health", "Reduced Inequalities"],
@@ -222,7 +248,7 @@ export const ngos = [
   {
     id: 23,
     name: "Habitat for Humanity India",
-    image: "https://images.unsplash.com/photo-1512591290618-904e04936827?w=500&q=80",
+    image: HabitatHumanity,
     raised: 4900000,
     target: 7000000,
     sdgs: ["Sustainable Cities", "No Poverty"],
@@ -232,7 +258,7 @@ export const ngos = [
   {
     id: 24,
     name: "Udayan Care",
-    image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=500&q=80",
+    image: UdayanCare,
     raised: 820000,
     target: 1500000,
     sdgs: ["Quality Education", "Reduced Inequalities"],

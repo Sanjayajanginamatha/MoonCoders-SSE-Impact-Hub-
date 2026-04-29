@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { ngos } from '../data/mockData';
@@ -58,6 +58,10 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const investDate = useRef(new Date().toISOString());
   const { account, contract, connectWallet } = useWeb3();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   if (!ngo) return <div className="p-8 text-center text-gray-500">NGO not found</div>;
 
@@ -178,14 +182,16 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Marketplace
         </button>
 
-        <div className="card p-0 overflow-hidden flex flex-col xl:flex-row">
-          <div className="xl:w-2/5 h-64 xl:h-auto relative bg-gray-100">
-            <img
-              src={imgError ? 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&q=80' : ngo.image}
-              alt={ngo.name}
-              className="w-full h-full object-cover"
-              onError={() => setImgError(true)}
-            />
+        <div className="bg-white rounded-2xl shadow-sm border border-border flex flex-col xl:flex-row">
+          <div className="xl:w-2/5 w-full bg-gray-900 rounded-t-2xl xl:rounded-tr-none xl:rounded-l-2xl">
+            <div className="sticky top-24 h-64 xl:h-[500px] w-full flex items-center justify-center p-6">
+              <img
+                src={imgError ? 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&q=80' : ngo.image}
+                alt={ngo.name}
+                className="w-full h-full object-contain drop-shadow-2xl"
+                onError={() => setImgError(true)}
+              />
+            </div>
           </div>
           <div className="xl:w-3/5 p-8">
             <div className="flex justify-between items-start mb-4">
@@ -245,6 +251,67 @@ export default function NgoDetail({ user, setUser, portfolio, setPortfolio }) {
                 <Info className="w-4 h-4 mt-0.5 shrink-0" />
                 By proceeding, you agree that this is a zero principal bond. Your capital will be used entirely for social impact.
               </p>
+            </div>
+
+            {/* Transparency & Fund Utilization Section */}
+            <div className="mt-10 border-t border-gray-200 pt-8">
+              <h3 className="text-2xl font-bold text-secondary mb-6 flex items-center gap-2">
+                <Shield className="w-6 h-6 text-primary" /> Transparency {"&"} Fund Utilization
+              </h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Fund Allocation Chart */}
+                <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
+                   <h4 className="font-semibold text-lg mb-5 text-secondary">Where do the funds go?</h4>
+                   <div className="space-y-5">
+                     <div>
+                       <div className="flex justify-between text-sm mb-1.5">
+                         <span className="text-gray-600 font-medium">Direct Program Execution</span>
+                         <span className="font-bold text-primary">85%</span>
+                       </div>
+                       <div className="w-full bg-green-100 rounded-full h-2.5">
+                         <div className="bg-primary h-2.5 rounded-full" style={{ width: '85%' }}></div>
+                       </div>
+                     </div>
+                     <div>
+                       <div className="flex justify-between text-sm mb-1.5">
+                         <span className="text-gray-600 font-medium">Capacity Building {"&"} Training</span>
+                         <span className="font-bold text-blue-500">10%</span>
+                       </div>
+                       <div className="w-full bg-blue-50 rounded-full h-2.5">
+                         <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: '10%' }}></div>
+                       </div>
+                     </div>
+                     <div>
+                       <div className="flex justify-between text-sm mb-1.5">
+                         <span className="text-gray-600 font-medium">Admin {"&"} Audits (SEBI Regulated)</span>
+                         <span className="font-bold text-gray-500">5%</span>
+                       </div>
+                       <div className="w-full bg-gray-100 rounded-full h-2.5">
+                         <div className="bg-gray-400 h-2.5 rounded-full" style={{ width: '5%' }}></div>
+                       </div>
+                     </div>
+                   </div>
+                   <p className="text-xs text-gray-400 mt-5 italic">* Independently audited to ensure maximum impact for your investment.</p>
+                </div>
+
+                {/* Impact Timeline */}
+                <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
+                   <h4 className="font-semibold text-lg mb-5 text-secondary">Recent Impact Updates</h4>
+                   <div className="space-y-6 border-l-2 border-primary/20 ml-2 pl-5 relative">
+                     <div className="relative">
+                       <div className="absolute -left-[27px] top-1 w-3.5 h-3.5 bg-primary rounded-full ring-4 ring-white"></div>
+                       <p className="text-xs text-primary font-bold mb-1 uppercase tracking-wider">This Month</p>
+                       <p className="text-sm text-gray-700 leading-relaxed">Deployed ₹5,00,000 towards Phase 1. Successfully reached 1,200 new beneficiaries in rural districts.</p>
+                     </div>
+                     <div className="relative">
+                       <div className="absolute -left-[27px] top-1 w-3.5 h-3.5 bg-gray-300 rounded-full ring-4 ring-white"></div>
+                       <p className="text-xs text-gray-500 font-bold mb-1 uppercase tracking-wider">3 Months Ago</p>
+                       <p className="text-sm text-gray-700 leading-relaxed">Completed independent audit by top-tier firm. 100% compliance verified with SEBI Social Stock Exchange guidelines.</p>
+                     </div>
+                   </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

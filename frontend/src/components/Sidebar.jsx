@@ -1,15 +1,35 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutGrid, PieChart, User, Bell, Trophy } from 'lucide-react';
 
-export default function Sidebar({ unreadNotifications = 2 }) {
+export default function Sidebar({ unreadNotifications }) {
   const location = useLocation();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (unreadNotifications !== undefined) {
+      setCount(unreadNotifications);
+      return;
+    }
+    try {
+      const saved = localStorage.getItem('sse_notifications');
+      if (saved) {
+        const notifs = JSON.parse(saved);
+        setCount(notifs.filter(n => !n.read).length);
+      } else {
+        setCount(2); // Initial mock count
+      }
+    } catch(e) {
+      setCount(2);
+    }
+  }, [unreadNotifications, location.pathname]);
 
   const navItems = [
     { path: '/dashboard', label: 'Impact Marketplace', icon: LayoutGrid },
     { path: '/portfolio', label: 'My Portfolio', icon: PieChart },
     { path: '/rank', label: 'My Rank', icon: Trophy },
     { path: '/account', label: 'Account & PAN', icon: User },
-    { path: '/notifications', label: 'Notifications', icon: Bell, badge: unreadNotifications },
+    { path: '/notifications', label: 'Notifications', icon: Bell, badge: count },
   ];
 
   return (

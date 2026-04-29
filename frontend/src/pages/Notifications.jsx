@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { Bell, CheckCircle, TrendingUp, FileText, ShieldCheck, Info, Trash2, CheckCheck } from 'lucide-react';
 
@@ -61,7 +61,23 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sse_notifications');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map(n => {
+          const original = MOCK_NOTIFICATIONS.find(m => m.id === n.id);
+          return { ...n, icon: original ? original.icon : Bell };
+        });
+      }
+    } catch (e) {}
+    return MOCK_NOTIFICATIONS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sse_notifications', JSON.stringify(notifications));
+  }, [notifications]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -79,7 +95,7 @@ export default function Notifications() {
 
   return (
     <div className="flex flex-1">
-      <Sidebar />
+      <Sidebar unreadNotifications={unreadCount} />
       <div className="flex-1 p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

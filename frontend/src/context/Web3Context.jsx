@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 const Web3Context = createContext();
 
 // Use the contract address you deployed!
-const CONTRACT_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"; 
+const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; 
 
 // Human-readable ABI for exactly the functions we need
 const CONTRACT_ABI = [

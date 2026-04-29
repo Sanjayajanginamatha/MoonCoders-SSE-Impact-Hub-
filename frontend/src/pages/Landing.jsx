@@ -31,29 +31,7 @@ export default function Landing() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-100 text-slate-900">
-      {/* Navbar */}
-      <nav className={`relative z-10 bg-white border-b border-slate-200 transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Globe className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-slate-900 tracking-tight">ImpactHub</span>
-            </div>
-            <div className="hidden md:flex items-center gap-8 font-medium">
-              <button onClick={() => navigate('/dashboard')} className="text-slate-600 hover:text-primary transition-colors">Marketplace</button>
-              <button onClick={() => navigate('/auth')} className="text-slate-600 hover:text-primary transition-colors">NGO Partners</button>
-              <button onClick={() => navigate('/auth')} className="text-slate-600 hover:text-primary transition-colors">About</button>
-            </div>
-            <div className="flex items-center gap-4">
-              <button onClick={() => navigate('/auth')} className="px-6 py-2.5 rounded-full bg-primary text-white font-semibold hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/30 transition-all">
-                Log In
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Global Navbar handles top navigation */}
 
       {/* Clean Professional Hero Section */}
       <section className={`relative overflow-hidden pt-20 pb-24 transition-all duration-1000 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
@@ -75,7 +53,7 @@ export default function Landing() {
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center pt-4">
-              <button onClick={() => navigate('/kyc')} className="group inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-white text-lg font-semibold shadow-xl shadow-primary/20 hover:bg-primary-hover hover:-translate-y-0.5 transition-all">
+              <button onClick={() => navigate('/auth')} className="group inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-white text-lg font-semibold shadow-xl shadow-primary/20 hover:bg-primary-hover hover:-translate-y-0.5 transition-all">
                 Start Investing
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -219,10 +197,10 @@ export default function Landing() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-white">Popular on SSE</h2>
-            <p className="text-sm text-slate-400 mt-2">Top choices from our impact-focused investors.</p>
+            <h2 className="text-3xl font-bold text-slate-900">Popular on SSE</h2>
+            <p className="text-sm text-slate-600 mt-2">Top choices from our impact-focused investors.</p>
           </div>
-          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
+          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 text-primary font-semibold hover:text-primary-hover transition-colors">
             Explore all investments <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -241,10 +219,10 @@ export default function Landing() {
                 <p className="text-sm text-slate-400 mb-5">{inv.risk}</p>
                 <div className="flex items-center justify-between text-white">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Social ROI</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Social ROI</p>
                     <p className="mt-2 flex items-center gap-2 text-lg font-semibold text-emerald-400"><TrendingUp className="h-4 w-4" />{inv.roi}</p>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-slate-500 transition group-hover:text-cyan-400" />
+                  <ArrowRight className="h-5 w-5 text-slate-400 transition group-hover:text-cyan-400" />
                 </div>
               </div>
             </div>
@@ -286,46 +264,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900/80 border-t border-slate-800 py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-lg font-bold text-white">ImpactInvest</span>
-              </div>
-              <p className="text-sm text-slate-400">India's first Social Stock Exchange platform for verified impact investing.</p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li><button onClick={() => navigate('/dashboard')} className="hover:text-cyan-400 transition-colors">Explore</button></li>
-                <li><button onClick={() => navigate('/auth')} className="hover:text-cyan-400 transition-colors">About Us</button></li>
-                <li><button onClick={() => navigate('/auth')} className="hover:text-cyan-400 transition-colors">Contact</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li className="hover:text-cyan-400 transition-colors cursor-pointer">Privacy Policy</li>
-                <li className="hover:text-cyan-400 transition-colors cursor-pointer">Terms of Service</li>
-                <li className="hover:text-cyan-400 transition-colors cursor-pointer">Disclaimer</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Connect</h4>
-              <p className="text-sm text-slate-400 mb-2">support@impactinvest.in</p>
-              <p className="text-sm text-slate-400">+91 98765 43210</p>
-            </div>
-          </div>
-          <div className="mt-12 pt-8 border-t border-slate-800 text-center">
-            <p className="text-sm text-slate-500">© 2026 ImpactInvest. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer removed to avoid duplication with global footer */}
     </div>
   );
 }

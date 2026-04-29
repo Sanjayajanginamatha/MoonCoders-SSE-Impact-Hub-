@@ -59,7 +59,7 @@ export default function Account({ user, setUser }) {
     }
     setKycLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       const res = await axios.put(
         'http://localhost:8080/api/auth/kyc',
         { pan: pan.toUpperCase(), dematAccountNumber: demat },
@@ -86,7 +86,7 @@ export default function Account({ user, setUser }) {
     }
     setKycLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       const res = await axios.put(
         'http://localhost:8080/api/auth/verify-pan',
         { pan: pan.toUpperCase() },
@@ -113,7 +113,7 @@ export default function Account({ user, setUser }) {
     }
     setKycLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
       const res = await axios.put(
         'http://localhost:8080/api/auth/link-demat',
         { dematAccountNumber: demat },

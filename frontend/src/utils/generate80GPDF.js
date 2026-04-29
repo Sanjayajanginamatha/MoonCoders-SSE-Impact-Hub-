@@ -479,6 +479,24 @@ export default function generate80GPDF({ user, ngo, amount, txnId, date, receipt
           margin: 0;
         }
 
+        /* ─── Track Impact Banner ─── */
+        .track-impact {
+          background: #f0f9ff;
+          border-left: 4px solid #0ea5e9;
+          padding: 12px 16px;
+          border-radius: 0 8px 8px 0;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          font-size: 12px;
+          color: #0369a1;
+          line-height: 1.6;
+          position: relative;
+          z-index: 1;
+        }
+        .track-impact strong {
+          color: #0c4a6e;
+        }
+
         /* Bottom border */
         .bottom-border {
           height: 6px;
@@ -682,6 +700,11 @@ export default function generate80GPDF({ user, ngo, amount, txnId, date, receipt
                 <span style="font-size:6px;">SEBI REG.</span>
               </div>
             </div>
+          </div>
+
+          <!-- Track Impact -->
+          <div class="track-impact">
+            <strong>📊 Track Your Impact:</strong> Want to see exactly how your money is being spent? You can view the real-time fund utilization and project progress directly on the <strong>SSE Impact Hub</strong> by visiting the NGO's page.
           </div>
 
           <!-- Computer Generated Note -->
